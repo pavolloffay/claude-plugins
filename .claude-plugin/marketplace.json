@@ -9,10 +9,6 @@
       "name": "konflux",
       "source": "./plugins/konflux",
       "description": "Commands to analyze and trigger Konflux builds",
-      "version": "1.0.0",
-      "author": {
-        "name": "pavolloffay"
-      }
     }
   ]
 }
