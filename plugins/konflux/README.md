@@ -16,7 +16,7 @@ a developer has all builds under control, AI agent can understand the TaskRun fa
 
 First build components:
 ```bash
-/konflux:componment build otel-collector-main otel-target-allocator-main otel-operator-main --wait 1h --nudge
+/konflux:component build otel-collector-main otel-target-allocator-main otel-operator-main --wait 1h --nudge
 ```
 The command executes builds of these 3 components and instructs AI agent to nudge the dependent files (in this case the OLM bundle).
 
