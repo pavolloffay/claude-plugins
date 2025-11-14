@@ -16,7 +16,7 @@ a developer has all builds under control, AI agent can understand the TaskRun fa
 
 First build components:
 ```bash
-/konflux:componment otel-collector-main otel-target-allocator-main otel-operator-main --wait 1h --nudge
+/konflux:componment build otel-collector-main otel-target-allocator-main otel-operator-main --wait 1h --nudge
 ```
 The command executes builds of these 3 components and instructs AI agent to nudge the dependent files (in this case the OLM bundle).
 
@@ -24,7 +24,7 @@ Then a developer commits the changes and pushes them to the repository.
 Once the changes are merged the bundle can be built:
 
 ```bash
-/konflux:component otel-collector-main --wait 1h --wait-release --nudge
+/konflux:component build otel-collector-main --wait 1h --wait-release --nudge
 ```
 The command instructs Konflux to build the bundle, nudge dependent files and wait for the release.
 In this case the nudge changes the FBC catalog template.
