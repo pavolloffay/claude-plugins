@@ -24,7 +24,7 @@ Then a developer commits the changes and pushes them to the repository.
 Once the changes are merged the bundle can be built:
 
 ```bash
-/konflux:component build otel-collector-main --wait 1h --wait-release --nudge
+/konflux:component build otel-bundle-main --wait 1h --wait-release 1h --nudge
 ```
 The command instructs Konflux to build the bundle, nudge dependent files and wait for the release.
 In this case the nudge changes the FBC catalog template.
