@@ -46,6 +46,7 @@ The command performs the following steps:
     - The commit SHA is provided in `.status.lastBuiltCommit`
  
 4. **Show status for each Konflux component**:
+    - Run the following Claude Code command to get status of each Konflux component from the application
     ```bash
     /konflux:component status {component}
     ```
