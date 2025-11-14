@@ -74,7 +74,7 @@ The command performs the following steps:
 ## Related Commands
 
 * `/konflux:component status <component>` - Show component status
-* `/konflux:component build <components> [--wait <duration>] [--nudge]` - Trigger component build
+* `/konflux:component build <components> [--wait <duration>] [--wait-release <duration>] [--nudge]` - Trigger component build
 
 ## Additional Resources
 

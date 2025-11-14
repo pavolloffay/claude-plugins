@@ -198,8 +198,7 @@ The command performs the following steps:
 
 ## Related Commands
 
-* `/konflux:application status <application>` - Show application status
-* `/konflux:application build <application> [--wait]` - Trigger application build
+* `/konflux:application status <application>` - Show status of all components in a Konflux application
 
 
 ## Additional Resources
