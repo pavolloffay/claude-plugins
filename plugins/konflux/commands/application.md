@@ -45,41 +45,11 @@ The command performs the following steps:
     - The Git repository URL is provided in `.spec.source.git.url`
     - The commit SHA is provided in `.status.lastBuiltCommit`
  
-4. **Get Git information**:
-    - Use the Git repository URL and commit SHA to obtain the Git branch name and commit message
-    - Use `git branch -a --contains <commit-sha>` to find the branch name
+4. **Show status for each Konflux component**:
+    ```bash
+    /konflux:component status {component}
+    ```
 
-5. **Get Snapshots**:
-    - Get snapshots of each component and order by oldest
-      ```bash
-      kubectl get snapshot -l pac.test.appstudio.openshift.io/sha={commit},appstudio.openshift.io/component={component} --sort-by=.metadata.creationTimestamp
-      ```
-
-7. **Get Releases**:
-    - Get releases object for each snapshot
-      ```bash
-      kubectl get release -l pac.test.appstudio.openshift.io/sha={commit},appstudio.openshift.io/component={component}
-      ```
-    - The snapshot is specified in `.spec.snapshot`
-    - The `.status.conditions` show if the release failed or succeeded
-      ```
-
-5. **Display result**:
-   - Display the result for each component:
-     ```
-     | Component        | Built SHA | Commit Message              | Git Branch   | Snapshots (oldest first) |
-     |------------------|-----------|-----------------------------|--------------|--------------------------|
-     | {component}      | {commit}  | {commit-message}            | {git-branch} | {snapshots}              |
-     | otel-bundle-main | 8ba2e60   | Fix service account (#693)  | main         | otel-main-jnhfz          |
-     ```
-   - Display snapshot with release information for each snapshot per component
-     ```
-     Component: {component}
-     | Snapshot        | Release                       | Release status                           |
-     |-----------------|-------------------------------|------------------------------------------|
-     | {snapshot}      | {release}                     | {release-status}                         |
-     | otel-main-jnhfz | otel-main-jnhfz-8ba2e60-nnwnp | Failed (ManagedPipelineProcessed failed) |
-     ```
 
 ## Return Value
 - **status**: Table of all components that belong to the provided application
