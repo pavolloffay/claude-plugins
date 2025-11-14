@@ -9,7 +9,7 @@ claude marketplace add https://github.com/pavolloffay/claude-plugins.git
 
 # or 
 
-/plugin marketplace add pavolloffay/claude-plugins
+/plugin marketplace add https://github.com/pavolloffay/claude-plugins.git
 ```
 
 Add individual commands or skills

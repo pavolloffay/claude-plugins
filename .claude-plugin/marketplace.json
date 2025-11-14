@@ -8,7 +8,7 @@
     {
       "name": "konflux",
       "source": "./plugins/konflux",
-      "description": "Commands to analyze and trigger Konflux builds",
+      "description": "Commands to analyze and trigger Konflux builds"
     }
   ]
 }
