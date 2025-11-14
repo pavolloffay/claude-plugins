@@ -6,6 +6,10 @@ This repository contains collection of my Claude Code plugins - e.g. commands an
 
 ```bash
 claude marketplace add https://github.com/pavolloffay/claude-plugins.git
+
+# or 
+
+/plugin marketplace add pavolloffay/claude-plugins
 ```
 
 Add individual commands or skills
@@ -19,6 +23,6 @@ claude skill install pavolloffay:plugin-name
 
 ## Plugins
 
-### Konflux
+### konflux
 
 The Konflux plugin simplifies working with Konflux by allowing executing Component builds and Getting status of the 
