@@ -16,6 +16,236 @@ Use this skill when:
 - Converting OpenShift TLS profile types to Go `crypto/tls` configuration
 - Troubleshooting TLS-related connection issues in OpenShift clusters
 
+## Requirements
+
+Operators implementing TLS security profiles must satisfy these requirements:
+
+1. **Read TLS profile from APIServer CR**: Fetch configuration from `apiservers.config.openshift.io/cluster`
+2. **Apply to all TLS endpoints**: Webhook server, metrics server, and any HTTP/gRPC clients or servers
+3. **Respond to profile changes**: If the TLS profile is updated in the cluster, the component should pick up the changes (may require restart depending on implementation)
+
+### Handling Profile Changes
+
+There are two approaches to respond to TLS profile changes:
+
+**Option A: Watch from Existing Controller (Recommended)**
+
+If your operator manages operands that need TLS configuration, watch the APIServer resource from your existing controller. This triggers operand reconciliation when the TLS profile changes, allowing you to update operand deployments with the new TLS settings:
+
+```go
+package controller
+
+import (
+	"context"
+	"reflect"
+
+	configv1 "github.com/openshift/api/config/v1"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	myv1 "myoperator/api/v1"
+)
+
+type MyOperandReconciler struct {
+	client.Client
+	Scheme *runtime.Scheme
+}
+
+func (r *MyOperandReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	// Fetch operand
+	operand := &myv1.MyOperand{}
+	if err := r.Get(ctx, req.NamespacedName, operand); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Fetch current TLS profile
+	profile, err := GetTLSSecurityProfile(ctx, r.Client)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Apply TLS configuration to operand's deployment/pods
+	// This could involve updating a ConfigMap, Secret, or Deployment annotation
+	// to trigger a rolling restart of operand pods with new TLS settings
+	if err := r.reconcileOperandTLS(ctx, operand, profile); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *MyOperandReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&myv1.MyOperand{}).
+		// Watch APIServer and trigger reconcile for all operands when TLS profile changes
+		Watches(
+			&configv1.APIServer{},
+			handler.EnqueueRequestsFromMapFunc(r.mapAPIServerToOperands),
+			builder.WithPredicates(tlsProfileChangedPredicate()),
+		).
+		Complete(r)
+}
+
+// mapAPIServerToOperands returns reconcile requests for all operands when APIServer changes
+func (r *MyOperandReconciler) mapAPIServerToOperands(ctx context.Context, obj client.Object) []reconcile.Request {
+	// Only react to the "cluster" APIServer
+	if obj.GetName() != "cluster" {
+		return nil
+	}
+
+	// List all operands and trigger reconcile for each
+	var operands myv1.MyOperandList
+	if err := r.List(ctx, &operands); err != nil {
+		return nil
+	}
+
+	requests := make([]reconcile.Request, len(operands.Items))
+	for i, op := range operands.Items {
+		requests[i] = reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      op.Name,
+				Namespace: op.Namespace,
+			},
+		}
+	}
+	return requests
+}
+
+// tlsProfileChangedPredicate filters events to only TLS profile changes
+func tlsProfileChangedPredicate() predicate.Predicate {
+	return predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			return e.Object.GetName() == "cluster"
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			if e.ObjectNew.GetName() != "cluster" {
+				return false
+			}
+			oldAPI, ok := e.ObjectOld.(*configv1.APIServer)
+			if !ok {
+				return false
+			}
+			newAPI, ok := e.ObjectNew.(*configv1.APIServer)
+			if !ok {
+				return false
+			}
+			// Only reconcile if TLS profile actually changed
+			return !reflect.DeepEqual(
+				oldAPI.Spec.TLSSecurityProfile,
+				newAPI.Spec.TLSSecurityProfile,
+			)
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+		GenericFunc: func(e event.GenericEvent) bool {
+			return false
+		},
+	}
+}
+
+func (r *MyOperandReconciler) reconcileOperandTLS(
+	ctx context.Context,
+	operand *myv1.MyOperand,
+	profile *configv1.TLSSecurityProfile,
+) error {
+	// Update operand deployment with new TLS settings
+	// For example, update an annotation to trigger rolling restart:
+	//
+	// deployment.Spec.Template.Annotations["tls-profile-hash"] = hashTLSProfile(profile)
+	//
+	// Or update a ConfigMap/Secret that the operand mounts
+	return nil
+}
+```
+
+This approach is efficient because:
+- Uses predicates to filter only TLS profile changes (ignores other APIServer updates)
+- Integrates with existing controller logic
+- Automatically reconciles all operands when the profile changes
+- Follows standard controller-runtime patterns
+
+**Option B: Dynamic TLS Config Update**
+
+For servers that support dynamic TLS config, use `GetConfigForClient`:
+
+```go
+package tlsprofile
+
+import (
+	"context"
+	"crypto/tls"
+	"sync"
+
+	configv1 "github.com/openshift/api/config/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+// DynamicTLSConfig provides a TLS config that updates when the profile changes
+type DynamicTLSConfig struct {
+	client    client.Client
+	mu        sync.RWMutex
+	current   *tls.Config
+	lastCheck time.Time
+	cacheTTL  time.Duration
+}
+
+func NewDynamicTLSConfig(c client.Client) *DynamicTLSConfig {
+	return &DynamicTLSConfig{
+		client:   c,
+		cacheTTL: 30 * time.Second,
+	}
+}
+
+// GetConfigForClient returns a TLS config callback for dynamic updates
+func (d *DynamicTLSConfig) GetConfigForClient(hello *tls.ClientHelloInfo) (*tls.Config, error) {
+	d.mu.RLock()
+	if d.current != nil && time.Since(d.lastCheck) < d.cacheTTL {
+		defer d.mu.RUnlock()
+		return d.current, nil
+	}
+	d.mu.RUnlock()
+
+	// Refresh TLS config from cluster
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	profile, err := GetTLSSecurityProfile(context.Background(), d.client)
+	if err != nil {
+		if d.current != nil {
+			return d.current, nil // Use cached config on error
+		}
+		return nil, err
+	}
+
+	d.current, err = TLSConfigFromProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	d.lastCheck = time.Now()
+
+	return d.current, nil
+}
+
+// BaseTLSConfig returns a tls.Config that uses dynamic configuration
+func (d *DynamicTLSConfig) BaseTLSConfig() *tls.Config {
+	return &tls.Config{
+		GetConfigForClient: d.GetConfigForClient,
+	}
+}
+```
+
+**Note:** Option A (watch and reconcile) is recommended for most operators because:
+- TLS configuration is typically set at server startup
+- Webhook and metrics servers in controller-runtime don't support hot-reload of TLS settings
+- Triggering operand restarts ensures clean application of new settings
+
 ## TLS Profile Types
 
 OpenShift supports four TLS profile types based on [Mozilla's Server Side TLS recommendations](https://wiki.mozilla.org/Security/Server_Side_TLS):
