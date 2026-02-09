@@ -5,19 +5,11 @@ This repository contains collection of my Claude Code plugins - e.g. commands an
 ## Install
 
 ```bash
-claude marketplace add https://github.com/pavolloffay/claude-plugins.git
-
-# or 
-
-/plugin marketplace add https://github.com/pavolloffay/claude-plugins.git
+/plugin marketplace add pavolloffay/claude-plugins
 ```
 
 Add individual commands or skills
 ```bash
-claude skill install pavolloffay:plugin-name
-
-# or
-
 /plugin install plugin-name@pavolloffay
 ```
 

@@ -1,0 +1,8 @@
+{
+  "name": "openshift-tls-profile",
+  "description": "",
+  "version": "0.0.1",
+  "author": {
+    "name": "github.com/pavolloffay"
+  }
+}
