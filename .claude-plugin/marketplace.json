@@ -9,6 +9,11 @@
       "name": "konflux",
       "source": "./plugins/konflux",
       "description": "Commands to analyze and trigger Konflux builds"
+    },
+    {
+      "name": "openshift-tls-profile",
+      "source": "./plugins/openshift-tls-profile",
+      "description": "Implementation requirements and details for OpenShift TLS security profiles"
     }
   ]
 }
