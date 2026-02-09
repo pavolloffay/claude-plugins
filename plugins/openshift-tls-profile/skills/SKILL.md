@@ -40,6 +40,7 @@ import (
 	"reflect"
 
 	configv1 "github.com/openshift/api/config/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -182,6 +183,7 @@ import (
 	"context"
 	"crypto/tls"
 	"sync"
+	"time"
 
 	configv1 "github.com/openshift/api/config/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -389,10 +391,9 @@ func TLSConfigFromProfile(profile *configv1.TLSSecurityProfile) (*tls.Config, er
 		return nil, err
 	}
 
-	cipherSuites, err := crypto.CipherSuitesToIDs(ciphers)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert cipher suites: %w", err)
-	}
+	// Convert OpenSSL cipher names to IANA names, then to Go constants
+	ianaCiphers := crypto.OpenSSLToIANACipherSuites(ciphers)
+	cipherSuites := crypto.CipherSuitesOrDie(ianaCiphers)
 
 	return &tls.Config{
 		MinVersion:   tlsMinVersion,
@@ -570,7 +571,7 @@ func NewHTTPServerWithTLSProfile(
 	}
 
 	// Add recommended server settings
-	tlsConfig.PreferServerCipherSuites = true
+	// Note: PreferServerCipherSuites is deprecated in Go 1.18+ and ignored
 	tlsConfig.CurvePreferences = []tls.CurveID{tls.CurveP256, tls.X25519}
 
 	server := &http.Server{
