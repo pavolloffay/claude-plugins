@@ -287,6 +287,11 @@ spec:
       minTLSVersion: VersionTLS12
 ```
 
+**Reference:**
+- [APIServer Config API Reference](https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/config_apis/apiserver-config-openshift-io-v1)
+- [APIServer CR Spec Example](https://github.com/robszumski/kubernetes-object-specs/blob/main/apiservers.config.openshift.io.yaml#L210)
+- [TLSSecurityProfile Type Definition](https://github.com/openshift/api/blob/master/config/v1/types_tlssecurityprofile.go#L211)
+
 ## Query Commands
 
 Check the current TLS security profile in your cluster:
@@ -802,6 +807,9 @@ func createSecureTLSConfig() *tls.Config {
 - [OpenShift TLS Security Profiles Documentation](https://docs.openshift.com/container-platform/latest/security/tls-security-profiles.html)
 - [Mozilla Server Side TLS](https://wiki.mozilla.org/Security/Server_Side_TLS)
 - [OpenShift API Types - TLS Security Profile](https://github.com/openshift/api/blob/master/config/v1/types_tlssecurityprofile.go)
+- [TLSSecurityProfile Type Definition](https://github.com/openshift/api/blob/master/config/v1/types_tlssecurityprofile.go#L211)
+- [APIServer Config API Reference](https://docs.redhat.com/en/documentation/openshift_container_platform/4.17/html/config_apis/apiserver-config-openshift-io-v1)
+- [APIServer CR Spec Example](https://github.com/robszumski/kubernetes-object-specs/blob/main/apiservers.config.openshift.io.yaml#L210)
 - [OpenShift library-go Crypto Package](https://pkg.go.dev/github.com/openshift/library-go/pkg/crypto)
 - [Go crypto/tls Package](https://pkg.go.dev/crypto/tls)
 - [controller-runtime Webhook Server](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/webhook)
