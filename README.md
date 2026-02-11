@@ -4,13 +4,24 @@ This repository contains collection of my Claude Code plugins - e.g. commands an
 
 ## Install
 
+Install for Github:
 ```bash
 /plugin marketplace add pavolloffay/claude-plugins
 ```
 
+Install from filesystem:
+```bash
+/plugin marketplace add /home/ploffay/projects/openshift-eng/ai-helpers
+```
+
+Update:
+```bash
+/plugin marketplace update ai-helpers
+````
+
 Add individual commands or skills
 ```bash
-/plugin install plugin-name@pavolloffay
+/marketplace
 ```
 
 ## Plugins
